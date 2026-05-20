@@ -13,12 +13,9 @@
 #include <cmath>
 #include <limits>
 #include <string>
-#include <list>     // Podklyuchaem konteyner list iz STL
-#include <iterator> // Dlya raboty s iteratorami
+#include <list>
 
 using namespace std;
-
-// --- FUNKCII VVODA (OSTAVLENY BEZ IZMENENIY, VYVOD NA TRANSLITE) ---
 
 int vvediChislo(const string &msg, int min, int max)
 {
@@ -77,17 +74,13 @@ double vvediDrobnoye(const string &msg)
     }
 }
 
-// --- STRUKTURA DLYA HRANENIYA DANNYH O STUDENTE ---
-
 struct Student
 {
-    string fio; // Teper ispolzuem udobnyy std::string vmesto opasnyh char*
+    string fio;
     int math;
     int info;
     int phys;
 };
-
-// --- OSNOVNAYA LOGIKA ZADACHI ---
 
 void reshitZadachuListSTL()
 {
@@ -95,30 +88,43 @@ void reshitZadachuListSTL()
 
     int n = vvediChislo("Vvedite kolichestvo studentov N (1-30): ", 1, 30);
 
-    // Sozdaem spisok studentov s pomoshchyu STL list
     list<Student> studentList;
 
-    // Vvod dannyh
-    for (int i = 0; i < n; i++)
+    int ch = vvediChislo("1 - ruchnoy vvod, 2 - sluchayno: ", 1, 2);
+    if (ch == 1)
     {
-        cout << "\nVvod dannyh dlya studenta #" << i + 1 << ":\n";
-        Student s;
-        
-        cout << "Vvedite familiyu: ";
-        getline(cin, s.fio);
+        for (int i = 0; i < n; i++)
+        {
+            cout << "\nVvod dannyh dlya studenta #" << i + 1 << ":\n";
+            Student s;
 
-        s.math = vvediChislo("Ocenka po matematike (2-5): ", 2, 5);
-        s.info = vvediChislo("Ocenka po informatike (2-5): ", 2, 5);
-        s.phys = vvediChislo("Ocenka po fizike (2-5): ", 2, 5);
+            cout << "Vvedite familiyu: ";
+            getline(cin, s.fio);
 
-        // Dobavlyaem element v konec STL-spiska
-        studentList.push_back(s);
+            s.math = vvediChislo("Ocenka po matematike (2-5): ", 2, 5);
+            s.info = vvediChislo("Ocenka po informatike (2-5): ", 2, 5);
+            s.phys = vvediChislo("Ocenka po fizike (2-5): ", 2, 5);
+
+            studentList.push_back(s);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < n; i++)
+        {
+            Student s;
+            s.fio = "Student_" + to_string(i + 1);
+            s.math = rand() % 4 + 2;
+            s.info = rand() % 4 + 2;
+            s.phys = rand() % 4 + 2;
+
+            studentList.push_back(s);
+        }
+        cout << "\nMassiv studentov zapolnen sluchaynymi chislami.\n";
     }
 
-    // Pechat polnogo spiska dlya proverki
     cout << "\nPolnyy spisok studentov:\n";
-    // Ispolzuem sovremennyy cikl dlya prohoda po vsem elementam list
-    for (const auto &s : studentList)
+    for (const Student &s : studentList)
     {
         cout << "FIO: " << setw(15) << left << s.fio
              << " | Mat: " << s.math
@@ -126,24 +132,20 @@ void reshitZadachuListSTL()
              << " | Fiz: " << s.phys << "\n";
     }
 
-    // Poisk i podschet otlichnikov po informatike
     cout << "\nStudenty, sdavshie informatiku na otlichno (ocenka 5):\n";
     int count = 0;
 
-    // Prohodim po spisku s pomoshchyu iteratora (tak rabotaet svyazannyy spisok v STL)
-    for (list<Student>::iterator it = studentList.begin(); it != studentList.end(); ++it)
+    for (const Student &s : studentList)
     {
-        if (it->info == 5)
+        if (s.info == 5)
         {
-            cout << " - " << it->fio << "\n";
+            cout << " - " << s.fio << "\n";
             count++;
         }
     }
 
     cout << "\nVsego otlichnikov po informatike: " << count << "\n";
 }
-
-// --- MENYU PROGRAMMY ---
 
 int main()
 {
@@ -171,6 +173,5 @@ int main()
 
     } while (repeat == 1);
 
-    cout << "\nProgramma uspeshno zavershena!\n";
     return 0;
 }

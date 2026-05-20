@@ -7,7 +7,6 @@
 физике. Ввести информацию об экзаменах и напечатать количество и фа-
 милии студентов, которые сдали информатику с оценкой отлично*/
 
-
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
@@ -131,6 +130,23 @@ public:
         size++;
     }
 
+    void predRandom(int index)
+    {
+        student *temp = new student;
+        string str = "Student_" + to_string(index);
+
+        temp->fio = new char[str.length() + 1];
+        strcpy(temp->fio, str.c_str());
+
+        temp->math = rand() % 4 + 2;
+        temp->info = rand() % 4 + 2;
+        temp->phys = rand() % 4 + 2;
+
+        temp->next = h;
+        h = temp;
+        size++;
+    }
+
     void print();
     void relase();
 
@@ -171,7 +187,8 @@ public:
 
             temp = temp->next;
         }
-
+        if (count == 0)
+            cout << "Studentov net\n";
         return count;
     }
 };
@@ -237,12 +254,26 @@ int main()
                 "Vvedite kolichestvo studentov N (1-30): ",
                 1, 30);
 
-            for (int i = 0; i < n; i++)
-            {
-                cout << "\nVvod dannyh dlya studenta №"
-                     << i + 1 << ":\n";
+            int mode = vvediChislo(
+                "Vyberite sposob zapolneniya (1 - ruchnoy, 2 - sluchayno): ",
+                1, 2);
 
-                studentList.pred();
+            if (mode == 1)
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    cout << "\nVvod dannyh dlya studenta №"
+                         << i + 1 << ":\n";
+                    studentList.pred();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    studentList.predRandom(i + 1);
+                }
+                cout << "\nSpisok zapolnen sluchaynymi chislami.\n";
             }
 
             studentList.print();
@@ -265,8 +296,6 @@ int main()
             0, 1);
 
     } while (repeat == 1);
-
-    cout << "\nProgramma zavershena.\n";
 
     return 0;
 }
