@@ -1,27 +1,25 @@
-/* 
-Разработать программу для обработки двумерного массива. Исполь-
-зовать досрочный выход из цикла при реализации. Предусмотреть случай,
-когда в исходном массиве искомых значений нет. Для проверки работо-
-способности программы разработать тесты, охватывающие все возмож-
-ные случаи для стандартных типов и пользовательского типа complex
-Проверить, есть ли в двумерном массиве хотя бы одна строка,
-которая не содержит элементов, попадающих в заданный диапазон, и
-найти её номер*/
+/*
+Используя класс list, созданный ранее, и добавив к нему необходи-
+мые методы, решить следующую задачу
+Имеется информация по итогам экзаменов в институте, всего в
+списке N человек. По каждому из студентов имеются следующие сведе-
+ния: фамилия, оценка по математике, оценка по информатике и оценка по
+физике. Ввести информацию об экзаменах и напечатать количество и фа-
+милии студентов, которые сдали информатику с оценкой отлично*/
+
 
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-#include <vector>
-#include <string>
 #include <limits>
+#include <string>
+#include <cstring>
 
 using namespace std;
 
-// --- Функции валидации ввода ---
-
-int vvediChislo(const string &msg, int min = numeric_limits<int>::min(), int max = numeric_limits<int>::max())
+int vvediChislo(const string &msg, int min, int max)
 {
     string line;
     while (true)
@@ -36,9 +34,12 @@ int vvediChislo(const string &msg, int min = numeric_limits<int>::min(), int max
                 if (pos == line.size() && x >= min && x <= max)
                     return x;
             }
-            catch (...) {}
+            catch (...)
+            {
+            }
         }
-        cout << "Ошибка! Введите целое число от " << min << " до " << max << ".\n";
+        cout << "Oshibka! Vvedite celoe chislo ot "
+             << min << " do " << max << ".\n";
     }
 }
 
@@ -53,7 +54,12 @@ double vvediDrobnoye(const string &msg)
         {
             bool ok = true;
             for (char c : line)
-                if (c == ',') { ok = false; break; }
+                if (c == ',')
+                {
+                    ok = false;
+                    break;
+                }
+
             if (ok)
             {
                 try
@@ -63,233 +69,204 @@ double vvediDrobnoye(const string &msg)
                     if (pos == line.size())
                         return x;
                 }
-                catch (...) {}
+                catch (...)
+                {
+                }
             }
         }
-        cout << "Ошибка! Введите вещественное число (разделитель — точка).\n";
+
+        cout << "Oshibka! Vvedite veshchestvennoe chislo "
+             << "(razdelitel — tochka).\n";
     }
 }
 
-// --- Пользовательский класс Complex ---
-
-class Complex
+struct student
 {
-    double real;
-    double imag;
-
-public:
-    Complex(double r = 0.0, double i = 0.0) : real(r), imag(i) {}
-
-    void zapolnitSluchayno()
-    {
-        real = (rand() % 201 - 100) / 10.0;
-        imag = (rand() % 201 - 100) / 10.0;
-    }
-
-    void input()
-    {
-        real = vvediDrobnoye("  Действительная часть: ");
-        imag = vvediDrobnoye("  Мнимая часть: ");
-    }
-
-    void print() const
-    {
-        cout << fixed << setprecision(2) << real;
-        if (imag >= 0) cout << " + " << imag << "i";
-        else cout << " - " << -imag << "i";
-    }
-
-    // Для комплексных чисел диапазон проверяется по их модулю (абсолютной величине)
-    double modul() const { return sqrt(real * real + imag * imag); }
-
-    // Операторы сравнения для проверки диапазонов по модулю
-    bool operator>=(double val) const { return this->modul() >= val; }
-    bool operator<=(double val) const { return this->modul() <= val; }
+    char *fio;
+    int math;
+    int info;
+    int phys;
+    student *next;
 };
 
-// Перегрузка оператора вывода для Complex, чтобы использовать в шаблонах печати матриц
-ostream& operator<<(ostream& os, const Complex& c)
+class list
 {
-    os << fixed << setprecision(2);
-    double r = static_cast<double>(int(c.modul() * 100)) / 100; // для красоты вывода модуля
-    // Выведем и само число, и его модуль в скобках для наглядности проверки диапазона
-    // Чтобы не перегружать вывод матрицы, вернем компактную строку
-    return os;
-}
+    int size;
+    student *h;
 
-// --- Шаблонные функции для работы с двумерным массивом (vector <vector<T>>) ---
-
-// Функция генерации случайного элемента (перегрузка для базовых типов и Complex)
-template <typename T>
-T sgenerirovatElement() { return static_cast<T>((rand() % 201 - 100) / 10.0); }
-
-template <>
-Complex sgenerirovatElement<Complex>()
-{
-    Complex c;
-    c.zapolnitSluchayno();
-    return c;
-}
-
-// Функция ввода элемента (перегрузка для базовых типов и Complex)
-template <typename T>
-T vvestiElement() { return static_cast<T>(vvediDrobnoye(" Введите число: ")); }
-
-template <>
-Complex vvestiElement<Complex>()
-{
-    Complex c;
-    c.input();
-    return c;
-}
-
-// Вывод матрицы на экран
-template <typename T>
-void pechatMatricy(const vector<vector<T>> &matrix)
-{
-    for (size_t i = 0; i < matrix.size(); ++i)
+public:
+    list()
     {
-        cout << "Строка " << i << ": ";
-        for (size_t j = 0; j < matrix[i].size(); ++j)
+        h = 0;
+        size = 0;
+    }
+
+    ~list()
+    {
+        relase();
+    }
+
+    void pred()
+    {
+        student *temp = new student;
+        string str;
+
+        cout << "Vvedite familiyu studenta: ";
+        getline(cin, str);
+
+        temp->fio = new char[str.length() + 1];
+        strcpy(temp->fio, str.c_str());
+
+        temp->math = vvediChislo(
+            "Ocenka po matematike (2-5): ", 2, 5);
+
+        temp->info = vvediChislo(
+            "Ocenka po informatike (2-5): ", 2, 5);
+
+        temp->phys = vvediChislo(
+            "Ocenka po fizike (2-5): ", 2, 5);
+
+        temp->next = h;
+        h = temp;
+        size++;
+    }
+
+    void print();
+    void relase();
+
+    void del()
+    {
+        if (h == 0)
+            return;
+
+        student *temp = h;
+        h = h->next;
+
+        delete[] temp->fio;
+        delete temp;
+    }
+
+    int g_size()
+    {
+        return size;
+    }
+
+    student *elem(int i);
+
+    int printExcellentInfoStudents()
+    {
+        student *temp = h;
+        int count = 0;
+
+        cout << "\nStudenty, sdavshie informatiku "
+             << "na otlichno (ocenka 5):\n";
+
+        while (temp != 0)
         {
-            if constexpr (is_same_v<T, Complex>)
+            if (temp->info == 5)
             {
-                matrix[i][j].print();
-                cout << " (mod:" << fixed << setprecision(2) << matrix[i][j].modul() << ")   ";
+                cout << " - " << temp->fio << "\n";
+                count++;
             }
-            else
-            {
-                cout << setw(6) << fixed << setprecision(2) << matrix[i][j] << " ";
-            }
+
+            temp = temp->next;
         }
-        cout << "\n";
+
+        return count;
+    }
+};
+
+void list::relase()
+{
+    while (h != 0)
+        del();
+
+    size = 0;
+}
+
+void list::print()
+{
+    student *temp = h;
+
+    cout << "\nPolnyy spisok studentov:\n";
+
+    while (temp != 0)
+    {
+        cout << "FIO: " << setw(15) << left << temp->fio
+             << " | Mat: " << temp->math
+             << " | Inf: " << temp->info
+             << " | Fiz: " << temp->phys << endl;
+
+        temp = temp->next;
     }
 }
 
-// --- Основной алгоритм решения задачи ---
-/* 
-  Ищет строку, которая НЕ содержит элементов из диапазона [minVal, maxVal].
-  Возвращает индекс строки, либо -1, если такой строки нет.
-*/
-template <typename T, typename BoundsType>
-int naitiStrokuBezDiapazona(const vector<vector<T>> &matrix, BoundsType minVal, BoundsType maxVal)
+student *list::elem(int i)
 {
-    int naidennyIndex = -1;
+    student *temp = h;
 
-    for (size_t i = 0; i < matrix.size(); ++i)
-    {
-        bool estPopadanie = false;
-        for (size_t j = 0; j < matrix[i].size(); ++j)
-        {
-            // Если элемент попал в диапазон
-            if (matrix[i][j] >= minVal && matrix[i][j] <= maxVal)
-            {
-                estPopadanie = true;
-                break; // Досрочный выход из цикла текущей строки (она нам не подходит)
-            }
-        }
+    for (int j = 0; j < i && temp != 0; j++)
+        temp = temp->next;
 
-        // Если вся строка проверена и в ней НЕ нашлось ни одного попадания
-        if (!estPopadanie)
-        {
-            naidennyIndex = static_cast<int>(i);
-            break; // Досрочный выход из внешнего цикла (первая подходящая строка найдена!)
-        }
-    }
-
-    return naidennyIndex;
-}
-
-// --- Функция-тестер для запуска под разные типы ---
-template <typename T>
-void zapuskZadachi(const string &typeName)
-{
-    cout << "\n=== Тестирование типа: " << typeName << " ===\n";
-
-    int rows = vvediChislo("Введите количество строк (1-10): ", 1, 10);
-    int cols = vvediChislo("Введите количество столбцов (1-10): ", 1, 10);
-
-    // Создаем двумерный вектор с помощью STL
-    vector<vector<T>> matrix(rows, vector<T>(cols));
-
-    int ch = vvediChislo("Выберите способ заполнения (1 - вручную, 2 - случайно): ", 1, 2);
-    if (ch == 1)
-    {
-        for (int i = 0; i < rows; ++i)
-        {
-            cout << "Заполнение строки " << i << ":\n";
-            for (int j = 0; j < cols; ++j)
-            {
-                cout << "  Элемент [" << i << "][" << j << "]:\n";
-                matrix[i][j] = vvestiElement<T>();
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < rows; ++i)
-            for (int j = 0; j < cols; ++j)
-                matrix[i][j] = sgenerirovatElement<T>();
-        cout << "Матрица успешно заполнена случайными значениями.\n";
-    }
-
-    cout << "\nИсходная матрица:\n";
-    pechatMatricy(matrix);
-
-    // Ввод границ диапазона
-    cout << "\nЗадайте диапазон проверки [минимум, максимум]\n";
-    if constexpr (is_same_v<T, Complex>)
-    {
-        cout << "(Внимание: для комплексных чисел проверка идет по их модулю)\n";
-    }
-    double minBound = vvediDrobnoye("Введите левую границу (минимум): ");
-    double maxBound = vvediDrobnoye("Введите правую границу (максимум): ");
-
-    if (minBound > maxBound)
-    {
-        cout << "Вы ввели минимум больше максимума. Поменяю их местами.\n";
-        swap(minBound, maxBound);
-    }
-
-    // Решение
-    int resultIndex = naitiStrokuBezDiapazona(matrix, minBound, maxBound);
-
-    cout << "\n--- РЕЗУЛЬТАТ ---\n";
-    if (resultIndex != -1)
-    {
-        cout << "Найдена строка, не содержащая элементов в диапазоне [" << minBound << "; " << maxBound << "].\n";
-        cout << "Номер строки (индекс): " << resultIndex << "\n";
-    }
-    else
-    {
-        cout << "В исходном массиве искомых строк НЕТ (в каждой строке есть хоть один элемент из диапазона).\n";
-    }
+    return temp;
 }
 
 int main()
 {
-    // Настройка локали для корректного вывода на русском языке
+    srand(time(0));
     setlocale(LC_ALL, "Russian");
-    srand(static_cast<unsigned int>(time(0)));
 
     int repeat;
+
     do
     {
-        cout << "\nВыберите тип данных для тестирования программы:\n";
-        cout << "1 - Стандартный тип (double)\n";
-        cout << "2 - Пользовательский тип (Complex)\n";
+        cout << "\nVyberite zadachu:\n";
+        cout << "1 - Vvod dannyh sessii studentov "
+             << "i poisk otlichnikov po informatike\n";
 
-        int choice = vvediChislo("Ваш выбор: ", 1, 2);
+        cout << "2 - Vyhod iz programmy\n";
+
+        int choice = vvediChislo(
+            "Vash vybor: ", 1, 2);
 
         if (choice == 1)
-            zapuskZadachi<double>("double (стандартный)");
-        else
-            zapuskZadachi<Complex>("Complex (пользовательский)");
+        {
+            list studentList;
 
-        repeat = vvediChislo("\nХотите протестировать программу снова? (1 - да / 0 - нет): ", 0, 1);
+            int n = vvediChislo(
+                "Vvedite kolichestvo studentov N (1-30): ",
+                1, 30);
+
+            for (int i = 0; i < n; i++)
+            {
+                cout << "\nVvod dannyh dlya studenta №"
+                     << i + 1 << ":\n";
+
+                studentList.pred();
+            }
+
+            studentList.print();
+
+            int count =
+                studentList.printExcellentInfoStudents();
+
+            cout << "\nVsego studentov s otlichnoy "
+                 << "ocenkoy po informatike: "
+                 << count << "\n";
+        }
+
+        if (choice == 2)
+        {
+            break;
+        }
+
+        repeat = vvediChislo(
+            "\nPovtorit programmu? (1/0): ",
+            0, 1);
 
     } while (repeat == 1);
 
-    cout << "Программа завершена";
+    cout << "\nProgramma zavershena.\n";
+
     return 0;
 }
